@@ -418,7 +418,7 @@
 
     function getKmaLabel() {
       return kmaUsingFallback
-        ? `🇰🇷 국내 대체 예보 (${kmaFallbackSource} · KMA 갱신 대기)`
+        ? `🇰🇷 한국`
         : MODEL_CONFIG.kma.label;
     }
 
@@ -929,7 +929,7 @@
           cardHtml += `
             <tr class="hover:bg-slate-50/70">
               <td class="sticky-col sticky-col-shadow bg-indigo-50 py-3 px-3 border-r border-slate-300 whitespace-nowrap">
-                <div class="font-extrabold text-indigo-950 text-xs sm:text-sm">🇪🇺 유럽 예보 (ECMWF)</div>
+                <div class="font-extrabold text-indigo-950 text-xs sm:text-sm">🇪🇺 유럽</div>
                 <div class="text-[10px] text-indigo-700 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
               </td>`;
           for (let hr = startH; hr <= endH; hr++) {
@@ -947,7 +947,7 @@
           cardHtml += `
             <tr class="hover:bg-slate-50/70">
               <td class="sticky-col sticky-col-shadow bg-amber-50 py-3 px-3 border-r border-slate-300 whitespace-nowrap">
-                <div class="font-extrabold text-amber-950 text-xs sm:text-sm">🇺🇸 미국 예보 (GFS)</div>
+                <div class="font-extrabold text-amber-950 text-xs sm:text-sm">🇺🇸 미국</div>
                 <div class="text-[10px] text-amber-800 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
               </td>`;
           for (let hr = startH; hr <= endH; hr++) {
