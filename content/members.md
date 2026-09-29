@@ -33,6 +33,8 @@ This page mirrors the current member sections from the original MIPAL website.
 - **Sunghyun Wee** - #on-device AI #CV; [wsh05@snu.ac.kr](mailto:wsh05@snu.ac.kr)
 - **Ingyun Lee** - #3D Perception #3D Computer Vision #Domain Generalization [ig.lee@snu.ac.kr](mailto:ig.lee@snu.ac.kr)
 - **Wonhark Park** - #Diffusion #Generative Model; [pwh0515@snu.ac.kr](mailto:pwh0515@snu.ac.kr)
+- **Minkyu Kim** - [minkyu.kim@snu.ac.kr](mailto:minkyu.kim@snu.ac.kr)
+- **BaekSeung Kim** - baekseung.kim@snu.ac.kr; Keunyoung; Kim; # LLM Pre-training; #Efficient Method for LLM; [keunyoung.kim@snu.ac.kr](mailto:keunyoung@snu.ac.kr)
 
 ### Ph.D. Students Photos
 
@@ -53,6 +55,8 @@ This page mirrors the current member sections from the original MIPAL website.
 ![Ph.D. Students photo 15](assets/members/ph-d-students-15.jpg)
 ![Ph.D. Students photo 16](assets/members/ph-d-students-16.jpg)
 ![Ph.D. Students photo 17](assets/members/ph-d-students-17.jpg)
+![Ph.D. Students photo 18](assets/members/ph-d-students-18.jpg)
+![Ph.D. Students photo 19](assets/members/ph-d-students-19.jpg)
 
 ## Integrated M.S./Ph.D. Students
 
@@ -63,7 +67,6 @@ This page mirrors the current member sections from the original MIPAL website.
 - **MinSung Hyun** - minsung.hyun@snu.ac.kr
 - **JooKyung Song** - #Diffusion chsjk9005@snu.ac.kr
 - **Yearim Kim** - #Explainable AI [yerim1656@snu.ac.kr](mailto:yerim1656@snu.ac.kr); [Linkedin](https://www.linkedin.com/in/yearim-kim-6171401b6/)
-- **JunHoo Lee** - #Dataset Distillation; #Optimization; [mrjunoo@snu.ac.kr](mailto:mrjunoo@snu.ac.kr); [https://junhoo-lee.com](https://junhoo-lee.com)
 - **Suyoung Kim** - #Knowledge distillation [ksyo96@snu.ac.kr](mailto:ksyo96@snu.ac.kr)
 - **Yeonjin Chang** - #3D Vision #Neural Rendering [yjean8315@snu.ac.kr](mailto:yjean8315@snu.ac.kr); [🍀](https://yeonjin-chang.github.io/) [📚](https://scholar.google.com/citations?user=VA88BFMAAAAJ) [🌐](https://www.linkedin.com/in/yeonjinchang/)
 - **Sangyu Han** - #Explainable AI; [acoexist96@snu.ac.kr](mailto:acoexist96@snu.ac.kr)
@@ -75,18 +78,20 @@ This page mirrors the current member sections from the original MIPAL website.
 - **Hyunho Lee** - #Generative Model #Dataset Distillation [hhlee822@snu.ac.kr](mailto:hhlee822@snu.ac.kr)
 - **Sungmo Kim** - sungmo96@snu.ac.kr
 - **Hyeongseok Lee** - #Diffusion, CV [tjdgns2048@snu.ac.kr](mailto:tjdgns2048@snu.ac.kr)
+- **Junmo Koo** - junmo.koo@snu,ac.kr
 - **Sangbum Han** - #LLM [snuhsb@snu.ac.kr](mailto:snuhsb@snu.ac.kr)
 - **Jaewon Jang** - #3DVision [pert0407@snu.ac.kr](mailto:pert0407@snu.ac.kr); [🌐](https://jaewon040.github.io/) [📚](https://scholar.google.com/citations?hl=en&user=K_U4ZMQAAAAJ)
-- **Junmo Koo** - junmo.koo@snu,ac.kr
 - **Mijin Koo** - # AI Safety; [starmj09@snu.ac.kr](mailto:starmj09@snu.ac.kr); [LinkedIn](https://www.linkedin.com/in/mijinkoo/)
 - **Juhwan Cho** - #3DVision #Video; hj99cho@snu,ac.kr
 - **Hahyeon Choi** - #Multimodal #Video; hahyeon.choi@snu,ac.kr; [📚](https://scholar.google.com/citations?user=o6ch8jMAAAAJ&hl=ko&authuser=1) [🌖](https://hahyeon610.github.io/)
 - **Geunwon Jun**
 - **Yun Kim** - #Large Language Model; yunkimmy@snu.ac.kr
 - **Sehoon Kim** - [ksh0113@snu.ac.kr](mailto:ksh0113@snu.ac.kr)
-- **Seungyeon Kim** - # WAM #VLA; [syeonkim@snu.ac.kr](mailto:syeonkim@snu.ac.kr); [Linkedin](https://www.linkedin.com/in/seungyeonkim1/)
+- **Seungyeon Kim** - # WAM #VLA; [syeonkim@snu.ac.kr](mailto:syeonkim@snu.ac.kr)
+- **[Homepage](https://seungyeon.me) [Linkedin](https://www.linkedin.com/in/seungyeonkim1/)**
 - **Soohong Kim** - #3DVision; shk00315@snu.ac.kr
-- **Seoyeon Ahn** - # VLM; [ahnsy0809@snu.ac.kr](mailto:ahnsy0809@snu.ac.kr)
+- **Seoyeon Ahn** - #VL M; [ahnsy0809@snu.ac.kr](mailto:ahnsy0809@snu.ac.kr)
+- **Junha Park** - # Large Language Model; s uperjun00 @snu.ac.kr
 
 ### Integrated M.S./Ph.D. Students Photos
 
@@ -118,18 +123,14 @@ This page mirrors the current member sections from the original MIPAL website.
 ![Integrated M.S./Ph.D. Students photo 26](assets/members/integrated-m-s-ph-d-students-26.jpg)
 ![Integrated M.S./Ph.D. Students photo 27](assets/members/integrated-m-s-ph-d-students-27.jpg)
 ![Integrated M.S./Ph.D. Students photo 28](assets/members/integrated-m-s-ph-d-students-28.jpg)
-![Integrated M.S./Ph.D. Students photo 29](assets/members/integrated-m-s-ph-d-students-29.jpg)
 
 ## M.S. Students
 
-- **Keunyoung Kim**
+- **Jongseok Park** - js82 @snu.ac.kr
 - **Daewon Yoon** - [daewon.yoon@snu.ac.kr](mailto:daewon.yoon@snu.ac.kr)
-- **Minkyu Kim** - [minkyu.kim@snu.ac.kr](mailto:minkyu.kim@snu.ac.kr)
-- **BaekSeung Kim** - baekseung.kim@snu.ac.kr
 - **Injun Baek** - jjune1416@snu.ac.kr; [📄](https://injun-baek.github.io/)
 - **Wonguen Cho** - wonguen.cho@snu.ac.kr
 - **Jinju Jang** - jinju.jang@ snu.ac.kr
-- **Jongseok Park** - js82 @snu.ac.kr
 
 ### M.S. Students Photos
 
@@ -139,15 +140,14 @@ This page mirrors the current member sections from the original MIPAL website.
 ![M.S. Students photo 4](assets/members/m-s-students-04.jpg)
 ![M.S. Students photo 5](assets/members/m-s-students-05.jpg)
 ![M.S. Students photo 6](assets/members/m-s-students-06.jpg)
-![M.S. Students photo 7](assets/members/m-s-students-07.jpg)
-![M.S. Students photo 8](assets/members/m-s-students-08.jpg)
-![M.S. Students photo 9](assets/members/m-s-students-09.jpg)
 
 ## Alumni
 
 - **Assistant Professor** - Minsik Lee 한양대학교 전자공학부; mleepaper@hanyang,ac.kr; Jiyong Oh 한국전자통신연구원; jiyongoh@etri.re.kr
 - **Post Doc.** - Youngjoon Yoo 중앙대학교 전자공학과; yjyoo3312@gmail.com; Ph.D.
-- **Yeji Song** - ldynx@snu.ac.kr
+- **Yeji Song**
+- **Qualcomm Korea** - ldynx@snu.ac.kr
+- **Junhoo Lee** - junhoo.lee@kaist.ac.kr
 - **Seunghyeon Seo** - Blizzard; zzzlssh@snu.ac.kr
 - **Jayeon Yoo** - 삼성전자 AI center; jayeon.yoo@snu.ac.kr; Kiyoon Yoo 크래프톤; 961230@snu.ac.kr; Inseop Chung 삼성전자 종합기술원; jis3613@snu.ac.kr
 - **Hojun Lee Xperty** - hojun815@snu.ac.kr; Wonmin Cho 국방과학연구소

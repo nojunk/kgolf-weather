@@ -6,7 +6,9 @@ title: Notice
 
 Recent notices migrated from the original MIPAL site.
 
-- Our paper "ReSpinQuant: Efficient Layer-Wise LLM Quantization via Subspace Residual Rotation Approximation" received an Outstanding Paper Award from the SNU-Samsung Electronics Industry-Academia Collaboration Program.
+- Last week (August 28, 2026), our lab welcomed three new Ph.D. graduates. Congratulations to Dr. Junhoo Lee, Dr. Geunjae Choi, and Dr. Minsung Hyun!
+- A paper has been accepted for EMNLP 2026 Main Conference. (Efficient Method for LLM Pre-training)
+- Our paper "ReSpinQuant: Efficient Layer-Wise LLM Quantization via Subspace Residual Rotation Approximation" received an Outstanding Paper Award from the Samsung Electronics Industry-Academia Collaboration Program.
 - Our paper " When Do Coupons Persuade? Experimental Evidence from Large-Scale Behavioral Data in Advertising" won the best paper award at ICORIA 2026, a prestigious European conference on advertising.
 - Three papers have been accepted for ECCV 2026 (4D Gaussian Splatting, Denoising Diffusion Policy Optimization, Zero-Shot Quantization )
 - Two papers have been accepted for ICML 2026. (Multimodal Mixture-of-Experts, LLM Quantization)
