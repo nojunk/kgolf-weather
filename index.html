@@ -127,6 +127,9 @@
         </div>
         <div class="flex items-center gap-3">
           <span id="statusBadge" class="text-xs font-semibold text-slate-500">⏳ 예보 데이터 수신 중...</span>
+          <button onclick="configureKmaProxy()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold transition" title="Cloudflare Worker 주소를 한 번만 설정합니다">
+            🇰🇷 KMA 연결
+          </button>
           <button onclick="fetchWeather()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-bold transition">
             🔄 새로고침
           </button>
@@ -404,9 +407,10 @@
     let viewStyle = 'dailyCards'; // 'dailyCards' | 'verticalList'
     let favorites = ["남서울CC", "안양CC", "라비에벨CC", "해슬리나인브릿지"];
     let kmaUsingFallback = false;
+    let kmaFallbackSource = '';
 
     const MODEL_CONFIG = {
-      kma: { model: 'kma_seamless', label: '🇰🇷 한국 기상청 (KMA)' },
+      kma: { label: '🇰🇷 한국 기상청 (KMA)' },
       ecmwf: { model: 'ecmwf_ifs025', label: '🇪🇺 유럽 예보 (ECMWF)' },
       gfs: { model: 'gfs_seamless', label: '🇺🇸 미국 예보 (GFS)' },
       fallback: { model: 'best_match', label: '🌐 국내 최적 대체 예보' }
@@ -414,12 +418,36 @@
 
     function getKmaLabel() {
       return kmaUsingFallback
-        ? '🇰🇷 국내 대체 예보 (KMA 갱신 대기)'
+        ? `🇰🇷 국내 대체 예보 (${kmaFallbackSource} · KMA 갱신 대기)`
         : MODEL_CONFIG.kma.label;
     }
 
     function hasUsableForecast(hourly) {
       return Array.isArray(hourly?.temperature_2m) && hourly.temperature_2m.some(v => v !== null && v !== undefined);
+    }
+
+    // Cloudflare Worker 주소는 사용자 브라우저에만 저장됩니다. 서비스 키는 절대 이 HTML에 저장하지 않습니다.
+    function getKmaProxyUrl() {
+      return localStorage.getItem('kgolf_kma_proxy_url') || '';
+    }
+
+    function configureKmaProxy() {
+      const value = window.prompt('Cloudflare Worker 주소를 입력하세요.\n예: https://kgolf-kma-proxy.<계정>.workers.dev', getKmaProxyUrl());
+      if (value === null) return;
+      const url = value.trim().replace(/\/$/, '');
+      if (!url) {
+        localStorage.removeItem('kgolf_kma_proxy_url');
+        showToast('KMA 연결 주소를 지웠습니다.');
+        return;
+      }
+      try {
+        if (!/^https:\/\//i.test(url)) throw new Error('https 주소가 아닙니다.');
+        localStorage.setItem('kgolf_kma_proxy_url', url);
+        showToast('KMA 연결 주소를 저장했습니다. 기상청 예보를 불러옵니다.');
+        fetchWeather();
+      } catch (error) {
+        showToast('올바른 https Worker 주소를 입력해 주세요.');
+      }
     }
 
     try {
@@ -604,6 +632,15 @@
       badge.innerText = '⏳ 3대 기상청 10일 시간대별 예보 수신 중...';
 
       try {
+        const fetchKma = async () => {
+          const proxyUrl = getKmaProxyUrl();
+          if (!proxyUrl) throw new Error('KMA Worker 주소가 설정되지 않았습니다.');
+          const response = await fetch(`${proxyUrl}?lat=${currentCourse.lat}&lon=${currentCourse.lon}`);
+          if (!response.ok) throw new Error(`KMA Worker: HTTP ${response.status}`);
+          const data = await response.json();
+          if (data.error) throw new Error(data.error);
+          return data;
+        };
         const fetchModel = async (model) => {
           const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentCourse.lat}&longitude=${currentCourse.lon}`
             + `&hourly=temperature_2m,precipitation,wind_speed_10m,weather_code`
@@ -617,7 +654,7 @@
         };
 
         const [kmaResult, ecmwfResult, gfsResult, fallbackResult] = await Promise.allSettled([
-          fetchModel(MODEL_CONFIG.kma.model),
+          fetchKma(),
           fetchModel(MODEL_CONFIG.ecmwf.model),
           fetchModel(MODEL_CONFIG.gfs.model),
           fetchModel(MODEL_CONFIG.fallback.model)
@@ -629,9 +666,38 @@
         const timeSource = kmaData || ecmwfData || gfsData || fallbackData;
         if (!timeSource?.hourly?.time) throw new Error('사용 가능한 예보 응답이 없습니다.');
 
-        // KMA 응답에 실제 예보값이 없을 때만 Best Match로 채우며, 화면에 대체 상태를 분명히 고지합니다.
-        const kmaHourly = hasUsableForecast(kmaData?.hourly) ? kmaData.hourly : fallbackData?.hourly;
-        kmaUsingFallback = !hasUsableForecast(kmaData?.hourly) && hasUsableForecast(fallbackData?.hourly);
+        // KMA 단기예보(글피까지)의 빈 시간은 Best Match → ECMWF → GFS 순으로 채웁니다.
+        // 따라서 독립 모델 중 하나라도 정상 수신되면 첫째 행은 절대 '미제공'으로 남지 않습니다.
+        const kmaIsAvailable = hasUsableForecast(kmaData?.hourly);
+        const fallbackCandidates = [
+          ['Open-Meteo Best Match', fallbackData?.hourly],
+          ['ECMWF', ecmwfData?.hourly],
+          ['GFS', gfsData?.hourly]
+        ];
+        const selectedFallback = fallbackCandidates.find(([, hourly]) => hasUsableForecast(hourly));
+        const timeline = timeSource.hourly.time;
+        const fillKmaTimeline = (primary, fallback) => {
+          const primaryIndex = new Map((primary?.time || []).map((time, index) => [time, index]));
+          const fallbackIndex = new Map((fallback?.time || []).map((time, index) => [time, index]));
+          const fields = ['temperature_2m', 'precipitation', 'wind_speed_10m', 'weather_code'];
+          const result = { time: timeline };
+          fields.forEach(field => {
+            result[field] = timeline.map(time => {
+              const primaryValue = primary?.[field]?.[primaryIndex.get(time)];
+              const fallbackValue = fallback?.[field]?.[fallbackIndex.get(time)];
+              return primaryValue ?? fallbackValue ?? null;
+            });
+          });
+          return result;
+        };
+        const kmaHourly = fillKmaTimeline(kmaData?.hourly, selectedFallback?.[1]);
+        const originalKmaIndex = new Map((kmaData?.hourly?.time || []).map((time, index) => [time, index]));
+        const kmaHasGaps = timeline.some((time, index) => {
+          const originalIndex = originalKmaIndex.get(time);
+          return kmaHourly.temperature_2m[index] !== null && (originalIndex === undefined || kmaData.hourly.temperature_2m[originalIndex] == null);
+        });
+        kmaUsingFallback = (!kmaIsAvailable || kmaHasGaps) && Boolean(selectedFallback);
+        kmaFallbackSource = kmaUsingFallback ? selectedFallback[0] : '';
         const mergeHourly = (source, suffix) => {
           const hourly = source?.hourly || {};
           return Object.fromEntries(['temperature_2m', 'precipitation', 'wind_speed_10m', 'weather_code']
@@ -652,7 +718,7 @@
 
         const nowTime = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
         badge.innerText = kmaUsingFallback
-          ? `⚠️ KMA 갱신 대기: 국내 최적 대체 예보 표시 중 (${nowTime} 기준)`
+          ? `⚠️ KMA 갱신 대기: ${kmaFallbackSource} 예보로 자동 대체 중 (${nowTime} 기준)`
           : `✅ 실시간 동기화 완료 (${nowTime} 기준 · 10일 예보)`;
 
         renderDayTabs();
