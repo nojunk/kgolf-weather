@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>K-Golf Weather | 전국 골프장 3대 기상청 통합 일기예보</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+    }
+    .sticky-col-shadow {
+      box-shadow: 4px 0 8px -2px rgba(15, 23, 42, 0.08);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-16">
+
+  <!-- 상단 알림 토스트 (alert 대체) -->
+  <div id="toastBox" class="fixed top-4 right-4 z-50 hidden transition-all duration-300">
+    <div id="toastContent" class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 text-xs sm:text-sm font-bold flex items-center gap-2">
+      <span>✅</span>
+      <span id="toastMessage">알림</span>
+    </div>
+  </div>
+
+  <div class="max-w-[1440px] mx-auto px-3 sm:px-6 py-4 sm:py-6">
+
+    <!-- 1. 상단 헤더 & 골프장 검색 -->
+    <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 mb-4">
+      <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+        
+        <!-- 타이틀 & 원클릭 코드 복사 버튼 -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-2xl">⛳</span>
+              <h1 class="text-xl sm:text-2xl font-extrabold text-emerald-950 tracking-tight">
+                K-Golf 3대 기상청 통합 일기예보
+              </h1>
+              <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full">
+                최대 10일 시간대별
+              </span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+              각 행(Row)별로 <b>🇰🇷한국(KMA) · 🇪🇺유럽(ECMWF) · 🇺🇸미국(GFS)</b>의 <b>기온 · 강수량 · 풍속</b>을 한눈에 비교합니다
+            </p>
+          </div>
+
+          <!-- GitHub 업로드용 전체 코드 복사 버튼 -->
+          <button
+            onclick="copyFullHtmlSource()"
+            class="self-start sm:self-center bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white text-xs font-extrabold px-3.5 py-2.5 rounded-xl shadow-sm transition flex items-center gap-1.5 whitespace-nowrap"
+            title="클릭하면 index.html 전체 코드가 클립보드에 복사됩니다"
+          >
+            <span>📋</span>
+            <span>HTML 전체 코드 복사하기</span>
+          </button>
+        </div>
+
+        <!-- 골프장 검색창 영역 -->
+        <div class="relative w-full xl:w-[480px]">
+          <div class="flex gap-1.5">
+            <div class="relative flex-1">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="골프장명, 지역, 초성 검색 (예: 남서울, ㄴㅅㅇ, ㅇㅇ, 춘천)..."
+                autocomplete="off"
+                class="w-full border border-slate-300 rounded-xl pl-9 pr-8 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-slate-50/50 focus:bg-white"
+              />
+              <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+              <button
+                id="clearSearchBtn"
+                onclick="clearSearch()"
+                class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-sm font-bold px-1"
+              >✕</button>
+            </div>
+            <button
+              onclick="searchOnlineCourse()"
+              class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl whitespace-nowrap transition shadow-sm"
+            >
+              🌐 전국 구장 온라인 검색
+            </button>
+          </div>
+
+          <!-- 자동완성 드롭다운 -->
+          <div
+            id="searchDropdown"
+            class="hidden absolute z-50 mt-1.5 w-full bg-white rounded-xl shadow-2xl border border-slate-200 max-h-80 overflow-y-auto divide-y divide-slate-100"
+          ></div>
+        </div>
+      </div>
+
+      <!-- 즐겨찾기 칩 영역 -->
+      <div class="mt-3.5 pt-3 border-t border-slate-100 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <span class="text-xs font-bold text-slate-400 whitespace-nowrap">⭐ 즐겨찾기 구장:</span>
+        <div id="favContainer" class="flex gap-1.5 items-center"></div>
+      </div>
+
+      <!-- 현재 선택된 골프장 상태 표시줄 -->
+      <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="px-2.5 py-1 bg-emerald-800 text-white rounded-lg font-bold text-xs">선택 구장</span>
+          <h2 class="font-extrabold text-slate-900 text-base sm:text-lg" id="selectedCourseName">남서울CC (경기 성남)</h2>
+          <button
+            id="favToggleBtn"
+            onclick="toggleFavoriteCurrent()"
+            class="text-xs px-2.5 py-1 rounded-lg border border-slate-300 hover:bg-amber-50 font-bold transition"
+          >
+            ☆ 즐겨찾기 추가
+          </button>
+          <span class="text-xs text-slate-400 font-mono" id="selectedCourseCoord">37.3825, 127.0789</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="statusBadge" class="text-xs font-semibold text-slate-500">⏳ 예보 데이터 수신 중...</span>
+          <button onclick="fetchWeather()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-bold transition">
+            🔄 새로고침
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. 10일 날짜 선택 리본 & 연속 표시/시간대 컨트롤 -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <!-- 날짜 연속 표시 범위 -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-xs font-bold text-slate-500 mr-1">📅 표시 기간:</span>
+          <button onclick="setDaySpan(4)" id="span-4" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-emerald-700 text-white shadow-sm">
+            선택일부터 4일 연속 (기본·추천)
+          </button>
+          <button onclick="setDaySpan(1)" id="span-1" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">
+            선택일 1일만
+          </button>
+          <button onclick="setDaySpan(10)" id="span-10" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">
+            향후 10일 전체 펼치기
+          </button>
+        </div>
+
+        <!-- 티오프 시간대 필터 -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-xs font-bold text-slate-500 mr-1">⏰ 시간대 필터:</span>
+          <button onclick="setHourFilter('golf')" id="hr-golf" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white">
+            라운딩 (05~20시)
+          </button>
+          <button onclick="setHourFilter('part1')" id="hr-part1" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border text-slate-700 hover:bg-slate-50">
+            1부 (05~10시)
+          </button>
+          <button onclick="setHourFilter('part2')" id="hr-part2" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border text-slate-700 hover:bg-slate-50">
+            2부 (11~15시)
+          </button>
+          <button onclick="setHourFilter('part3')" id="hr-part3" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border text-slate-700 hover:bg-slate-50">
+            3부·야간 (16~22시)
+          </button>
+          <button onclick="setHourFilter('full24')" id="hr-full24" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border text-slate-700 hover:bg-slate-50">
+            24시간 전체
+          </button>
+        </div>
+      </div>
+
+      <!-- 10일 날짜 리본 버튼 컨테이너 -->
+      <div id="dayTabsContainer" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+    </section>
+
+    <!-- 3. 범례 & 표 레이아웃 전환 바 -->
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3 px-1">
+      <div class="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+        <span class="font-bold text-slate-800">📌 셀 통합 표시 항목:</span>
+        <span class="bg-white border border-slate-300 px-2 py-0.5 rounded font-bold text-slate-900">날씨아이콘 + 기온(°C)</span>
+        <span class="bg-blue-50 border border-blue-200 px-2 py-0.5 rounded font-bold text-blue-700">💧 시간당 강수량(mm)</span>
+        <span class="bg-slate-200/80 px-2 py-0.5 rounded font-semibold text-slate-700">💨 풍속(m/s)</span>
+        <span class="hidden sm:inline text-slate-400">|</span>
+        <span>🟢 <b>쾌적</b>(비 없음)</span>
+        <span>🟡 <b>엇갈림</b>(1곳만 비)</span>
+        <span>🔴 <b>우천 유력</b>(2곳 이상 비)</span>
+      </div>
+
+      <div class="flex bg-white rounded-xl p-1 border border-slate-300 text-xs font-bold shadow-sm">
+        <button onclick="setViewStyle('dailyCards')" id="style-dailyCards" class="px-3 py-1.5 rounded-lg bg-emerald-800 text-white transition">
+          📅 일자별 가로 비교표 (Row=기상청)
+        </button>
+        <button onclick="setViewStyle('verticalList')" id="style-verticalList" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition">
+          📑 시간순 세로 상세표 (Row=기상청)
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. 메인 예보 테이블 출력 컨테이너 -->
+    <main id="tablesContainer" class="space-y-5"></main>
+
+  </div>
+
+  <script>
+    // 1. 전국 주요 골프장 내장 DB (이름, 지역, 위경도)
+    const GOLF_COURSES = [
+      // 경기 남부·용인·성남·안양·화성
+      { name: "남서울CC", region: "경기 성남", lat: 37.3825, lon: 127.0789 },
+      { name: "안양CC", region: "경기 군포", lat: 37.3456, lon: 126.9421 },
+      { name: "남부CC", region: "경기 용인", lat: 37.2689, lon: 127.0942 },
+      { name: "태광CC", region: "경기 용인", lat: 37.2741, lon: 127.0825 },
+      { name: "수원CC", region: "경기 용인", lat: 37.2695, lon: 127.1153 },
+      { name: "한성CC", region: "경기 용인", lat: 37.3092, lon: 127.1184 },
+      { name: "팔팔CC (88CC)", region: "경기 용인", lat: 37.2891, lon: 127.1412 },
+      { name: "레이크사이드CC", region: "경기 용인", lat: 37.3268, lon: 127.2215 },
+      { name: "글렌로스GC", region: "경기 용인", lat: 37.2915, lon: 127.2185 },
+      { name: "아시아나CC", region: "경기 용인", lat: 37.2214, lon: 127.2912 },
+      { name: "은화삼CC", region: "경기 용인", lat: 37.2112, lon: 127.2415 },
+      { name: "화산CC", region: "경기 용인", lat: 37.1632, lon: 127.2718 },
+      { name: "골드CC", region: "경기 용인", lat: 37.2051, lon: 127.1312 },
+      { name: "코리아CC", region: "경기 용인", lat: 37.1985, lon: 127.1295 },
+      { name: "써닝포인트CC", region: "경기 용인", lat: 37.1512, lon: 127.3214 },
+      { name: "플라자CC 용인", region: "경기 용인", lat: 37.1412, lon: 127.1912 },
+      { name: "리베라CC", region: "경기 화성", lat: 37.1952, lon: 127.0891 },
+      { name: "기흥CC", region: "경기 화성", lat: 37.1812, lon: 127.0712 },
+      { name: "발리오스CC", region: "경기 화성", lat: 37.1289, lon: 126.9123 },
+      { name: "뉴서울CC", region: "경기 광주", lat: 37.3912, lon: 127.2312 },
+      { name: "강남300CC", region: "경기 광주", lat: 37.3612, lon: 127.2512 },
+      { name: "이스트밸리CC", region: "경기 광주", lat: 37.3312, lon: 127.3612 },
+      // 경기 이천·여주·안성
+      { name: "지산CC", region: "경기 이천", lat: 37.2165, lon: 127.3524 },
+      { name: "웰링턴CC", region: "경기 이천", lat: 37.2291, lon: 127.4921 },
+      { name: "사우스스프링스CC", region: "경기 이천", lat: 37.2054, lon: 127.5102 },
+      { name: "블랙스톤 이천", region: "경기 이천", lat: 37.1652, lon: 127.5812 },
+      { name: "뉴스프링빌CC", region: "경기 이천", lat: 37.1812, lon: 127.5312 },
+      { name: "비에이비스타CC", region: "경기 이천", lat: 37.1712, lon: 127.4812 },
+      { name: "해슬리나인브릿지", region: "경기 여주", lat: 37.2653, lon: 127.5681 },
+      { name: "트리니티클럽", region: "경기 여주", lat: 37.2412, lon: 127.6124 },
+      { name: "렉스필드CC", region: "경기 여주", lat: 37.2912, lon: 127.5123 },
+      { name: "자유CC", region: "경기 여주", lat: 37.2315, lon: 127.5891 },
+      { name: "스카이밸리CC", region: "경기 여주", lat: 37.3512, lon: 127.6912 },
+      { name: "페럼클럽", region: "경기 여주", lat: 37.2109, lon: 127.6845 },
+      { name: "세라지오GC", region: "경기 여주", lat: 37.2611, lon: 127.6012 },
+      { name: "소피아그린CC", region: "경기 여주", lat: 37.2390, lon: 127.7110 },
+      { name: "신라CC", region: "경기 여주", lat: 37.2512, lon: 127.6912 },
+      { name: "여주CC", region: "경기 여주", lat: 37.2712, lon: 127.6112 },
+      { name: "캐슬파인GC", region: "경기 여주", lat: 37.3212, lon: 127.5912 },
+      { name: "안성베네스트GC", region: "경기 안성", lat: 37.0812, lon: 127.3212 },
+      { name: "골프존카운티 안성H", region: "경기 안성", lat: 37.0512, lon: 127.2912 },
+      // 인천·경기 서북부·동북부
+      { name: "베어즈베스트 청라", region: "인천 서구", lat: 37.5432, lon: 126.6321 },
+      { name: "클럽72 (구 스카이72)", region: "인천 영종도", lat: 37.4612, lon: 126.4891 },
+      { name: "잭니클라우스GC 코리아", region: "인천 송도", lat: 37.3812, lon: 126.6189 },
+      { name: "드림파크CC", region: "인천 서구", lat: 37.5612, lon: 126.6512 },
+      { name: "김포씨사이드CC", region: "경기 김포", lat: 37.7112, lon: 126.5412 },
+      { name: "서서울CC", region: "경기 파주", lat: 37.7512, lon: 126.8612 },
+      { name: "서원밸리CC / 서원힐스", region: "경기 파주", lat: 37.8123, lon: 126.8912 },
+      { name: "송추CC", region: "경기 양주", lat: 37.7412, lon: 126.9612 },
+      { name: "레이크우드CC", region: "경기 양주", lat: 37.7812, lon: 127.0812 },
+      { name: "포천힐스CC", region: "경기 포천", lat: 37.9123, lon: 127.2412 },
+      { name: "몽베르CC", region: "경기 포천", lat: 38.0512, lon: 127.3123 },
+      { name: "베어크리크 포천", region: "경기 포천", lat: 37.8912, lon: 127.3012 },
+      { name: "일동레이크GC", region: "경기 포천", lat: 37.9612, lon: 127.3212 },
+      { name: "해비치CC 서울", region: "경기 남양주", lat: 37.6712, lon: 127.3112 },
+      { name: "비전힐스CC", region: "경기 남양주", lat: 37.6512, lon: 127.3312 },
+      { name: "가평베네스트GC", region: "경기 가평", lat: 37.7912, lon: 127.3812 },
+      { name: "마이다스밸리GC", region: "경기 가평", lat: 37.7012, lon: 127.4215 },
+      { name: "아난티코드", region: "경기 가평", lat: 37.6812, lon: 127.4612 },
+      { name: "프리스틴밸리GC", region: "경기 가평", lat: 37.8214, lon: 127.4123 },
+      { name: "더스타휴CC", region: "경기 양평", lat: 37.5412, lon: 127.6712 },
+      // 강원권
+      { name: "라비에벨CC", region: "강원 춘천", lat: 37.7612, lon: 127.6812 },
+      { name: "제이드팰리스GC", region: "강원 춘천", lat: 37.8212, lon: 127.6123 },
+      { name: "남춘천CC", region: "강원 춘천", lat: 37.7312, lon: 127.7412 },
+      { name: "오너스GC", region: "강원 춘천", lat: 37.7512, lon: 127.6912 },
+      { name: "휘슬링락CC", region: "강원 춘천", lat: 37.7112, lon: 127.6512 },
+      { name: "엘리시안 강촌", region: "강원 춘천", lat: 37.8185, lon: 127.5891 },
+      { name: "소노펠리체CC (비발디)", region: "강원 홍천", lat: 37.6451, lon: 127.6852 },
+      { name: "블루마운틴CC", region: "강원 홍천", lat: 37.7214, lon: 127.9512 },
+      { name: "세이지우드 홍천", region: "강원 홍천", lat: 37.6912, lon: 127.8123 },
+      { name: "클럽모우", region: "강원 홍천", lat: 37.6812, lon: 127.7212 },
+      { name: "센추리21CC", region: "강원 원주", lat: 37.4123, lon: 127.7812 },
+      { name: "오크밸리CC", region: "강원 원주", lat: 37.4012, lon: 127.8123 },
+      { name: "성문안CC", region: "강원 원주", lat: 37.3912, lon: 127.8312 },
+      { name: "알펜시아CC / 700GC", region: "강원 평창", lat: 37.6584, lon: 128.6811 },
+      { name: "용평CC / 버치힐GC", region: "강원 평창", lat: 37.6412, lon: 128.6912 },
+      { name: "하이원CC", region: "강원 정선", lat: 37.2012, lon: 128.8212 },
+      { name: "설해원 (골든비치)", region: "강원 양양", lat: 38.0912, lon: 128.6312 },
+      { name: "파인리즈CC", region: "강원 고성", lat: 38.2312, lon: 128.5412 },
+      { name: "메이플비치GC", region: "강원 강릉", lat: 37.7012, lon: 129.0112 },
+      // 충청·전라·경상·제주
+      { name: "천안상록CC", region: "충남 천안", lat: 36.7412, lon: 127.2812 },
+      { name: "우정힐스CC", region: "충남 천안", lat: 36.7612, lon: 127.2512 },
+      { name: "파인스톤CC", region: "충남 당진", lat: 36.9512, lon: 126.6812 },
+      { name: "그랜드CC", region: "충북 청주", lat: 36.7123, lon: 127.4612 },
+      { name: "떼제베CC", region: "충북 청주", lat: 36.6372, lon: 127.3897 },
+      { name: "레인보우힐스CC", region: "충북 음성", lat: 37.0512, lon: 127.6812 },
+      { name: "유성CC", region: "대전 유성", lat: 36.3612, lon: 127.3312 },
+      { name: "파인비치 골프링크스", region: "전남 해남", lat: 34.5612, lon: 126.3123 },
+      { name: "골드레이크CC", region: "전남 나주", lat: 34.9812, lon: 126.8212 },
+      { name: "승주CC", region: "전남 순천", lat: 35.0123, lon: 127.4123 },
+      { name: "장수GC", region: "전북 장수", lat: 35.6512, lon: 127.5212 },
+      { name: "동래베네스트GC", region: "부산 동래", lat: 35.2212, lon: 129.0912 },
+      { name: "아시아드CC", region: "부산 기장", lat: 35.2712, lon: 129.2112 },
+      { name: "해운대비치골프앤리조트", region: "부산 기장", lat: 35.2112, lon: 129.2212 },
+      { name: "가야CC", region: "경남 김해", lat: 35.2612, lon: 128.9123 },
+      { name: "사우스케이프 오너스클럽", region: "경남 남해", lat: 34.7412, lon: 128.0512 },
+      { name: "대구CC", region: "경북 경산", lat: 35.8912, lon: 128.8123 },
+      { name: "블루원 디아너스CC", region: "경북 경주", lat: 35.8123, lon: 129.2912 },
+      { name: "클럽나인브릿지 제주", region: "제주 서귀포", lat: 33.3412, lon: 126.3912 },
+      { name: "핀크스GC", region: "제주 서귀포", lat: 33.3112, lon: 126.3812 },
+      { name: "블랙스톤 제주", region: "제주 제주시", lat: 33.3512, lon: 126.3123 },
+      { name: "엘리시안 제주", region: "제주 제주시", lat: 33.4112, lon: 126.3912 },
+      { name: "롯데스카이힐 제주", region: "제주 서귀포", lat: 33.2912, lon: 126.4112 }
+    ];
+
+    // 한글 초성 추출 함수
+    const CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    function getChosung(str) {
+      let res = "";
+      for (let i = 0; i < str.length; i++) {
+        const code = str.charCodeAt(i) - 44032;
+        res += (code > -1 && code < 11172) ? CHOSUNG[Math.floor(code / 588)] : str.charAt(i);
+      }
+      return res;
+    }
+
+    // WMO 날씨 코드 및 강수량 기반 아이콘 반환
+    function getWeatherIcon(wmoCode, rainMm) {
+      if (rainMm !== null && rainMm !== undefined && rainMm >= 2.0) return '🌧️';
+      if (rainMm !== null && rainMm !== undefined && rainMm > 0) return '🌦️';
+      if (wmoCode === null || wmoCode === undefined) return '☀️';
+      if (wmoCode === 0) return '☀️';
+      if (wmoCode === 1 || wmoCode === 2) return '🌤️';
+      if (wmoCode === 3) return '☁️';
+      if (wmoCode === 45 || wmoCode === 48) return '🌫️';
+      if (wmoCode >= 51 && wmoCode <= 67) return '🌧️';
+      if (wmoCode >= 71 && wmoCode <= 77) return '❄️';
+      if (wmoCode >= 80 && wmoCode <= 82) return '🌦️';
+      if (wmoCode >= 95) return '⛈️';
+      return '☀️';
+    }
+
+    // 토스트 메시지 표시 함수 (alert 대체)
+    let toastTimer = null;
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      const text = document.getElementById('toastMessage');
+      text.innerText = msg;
+      box.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        box.classList.add('hidden');
+      }, 3200);
+    }
+
+    // 전체 HTML 소스 코드 클립보드 복사 함수
+    function copyFullHtmlSource() {
+      try {
+        const fullHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+        const tempArea = document.createElement('textarea');
+        tempArea.value = fullHtml;
+        tempArea.style.position = 'fixed';
+        tempArea.style.left = '-9999px';
+        document.body.appendChild(tempArea);
+        tempArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempArea);
+        showToast("HTML 전체 코드가 복사되었습니다! GitHub의 index.html에 붙여넣으세요.");
+      } catch (e) {
+        showToast("복사 중 오류가 발생했습니다. 우측 에디터에서 직접 복사해 주세요.");
+      }
+    }
+
+    // 애플리케이션 상태 변수
+    let currentCourse = GOLF_COURSES[0];
+    let rawData = null;
+    let availableDates = [];
+    let selectedDateIdx = 0;
+    let daySpan = 4;              // 기본 4일 연속 표시 (오늘~글피)
+    let hourFilter = 'golf';      // 'golf'(05~20시) | 'part1' | 'part2' | 'part3' | 'full24'
+    let viewStyle = 'dailyCards'; // 'dailyCards' | 'verticalList'
+    let favorites = ["남서울CC", "안양CC", "라비에벨CC", "해슬리나인브릿지"];
+
+    try {
+      const saved = localStorage.getItem('kgolf_favs');
+      if (saved) favorites = JSON.parse(saved);
+    } catch (e) {}
+
+    const searchInput = document.getElementById('searchInput');
+    const searchDropdown = document.getElementById('searchDropdown');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    // 즐겨찾기 렌더링
+    function renderFavorites() {
+      const container = document.getElementById('favContainer');
+      container.innerHTML = '';
+      favorites.forEach(favName => {
+        const found = GOLF_COURSES.find(c => c.name === favName);
+        if (!found) return;
+        const isCurrent = found.name === currentCourse.name;
+        const btn = document.createElement('button');
+        btn.className = `px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap transition ${
+          isCurrent ? 'bg-amber-500 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+        }`;
+        btn.innerText = found.name;
+        btn.onclick = () => selectCourse(found);
+        container.appendChild(btn);
+      });
+
+      const favBtn = document.getElementById('favToggleBtn');
+      const isFav = favorites.includes(currentCourse.name);
+      favBtn.innerText = isFav ? '★ 즐겨찾기됨' : '☆ 즐겨찾기 추가';
+      favBtn.className = isFav
+        ? 'text-xs px-2.5 py-1 rounded-lg border border-amber-400 bg-amber-50 text-amber-800 font-bold transition'
+        : 'text-xs px-2.5 py-1 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-600 font-bold transition';
+    }
+
+    function toggleFavoriteCurrent() {
+      const idx = favorites.indexOf(currentCourse.name);
+      if (idx >= 0) {
+        favorites.splice(idx, 1);
+        showToast(`'${currentCourse.name}' 즐겨찾기가 해제되었습니다.`);
+      } else {
+        if (!GOLF_COURSES.some(c => c.name === currentCourse.name)) {
+          GOLF_COURSES.unshift(currentCourse);
+        }
+        favorites.push(currentCourse.name);
+        showToast(`'${currentCourse.name}' 구장이 즐겨찾기에 추가되었습니다.`);
+      }
+      try {
+        localStorage.setItem('kgolf_favs', JSON.stringify(favorites));
+      } catch (e) {}
+      renderFavorites();
+    }
+
+    // 검색창 입력 이벤트
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      clearSearchBtn.classList.toggle('hidden', q.length === 0);
+      if (!q) {
+        renderDropdown(GOLF_COURSES.slice(0, 20));
+        return;
+      }
+      const matched = GOLF_COURSES.filter(c => {
+        const target = `${c.name} ${c.region}`.toLowerCase();
+        return target.includes(q) || getChosung(target).includes(q);
+      });
+      renderDropdown(matched, q);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const q = searchInput.value.trim().toLowerCase();
+        const matched = GOLF_COURSES.filter(c => {
+          const target = `${c.name} ${c.region}`.toLowerCase();
+          return target.includes(q) || getChosung(target).includes(q);
+        });
+        if (matched.length > 0) selectCourse(matched[0]);
+        else searchOnlineCourse();
+      }
+    });
+
+    searchInput.addEventListener('focus', () => {
+      if (!searchInput.value.trim()) renderDropdown(GOLF_COURSES.slice(0, 20));
+      else searchInput.dispatchEvent(new Event('input'));
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+        searchDropdown.classList.add('hidden');
+      }
+    });
+
+    function clearSearch() {
+      searchInput.value = '';
+      clearSearchBtn.classList.add('hidden');
+      searchInput.focus();
+    }
+
+    function renderDropdown(list, query = '') {
+      searchDropdown.innerHTML = '';
+      if (list.length === 0) {
+        searchDropdown.innerHTML = `
+          <div class="p-3.5 text-xs text-slate-600 flex items-center justify-between bg-slate-50">
+            <span>기본 목록에 '<b>${query}</b>' 구장이 없습니다.</span>
+            <button onclick="searchOnlineCourse()" class="bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg font-bold">
+              🌐 전국 지도에서 바로 찾기 →
+            </button>
+          </div>`;
+      } else {
+        list.forEach(c => {
+          const item = document.createElement('button');
+          item.className = 'w-full text-left px-4 py-2.5 hover:bg-emerald-50 flex justify-between items-center text-sm transition';
+          item.innerHTML = `
+            <span class="font-bold text-slate-800">⛳ ${c.name}</span>
+            <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-medium">${c.region}</span>
+          `;
+          item.onclick = () => selectCourse(c);
+          searchDropdown.appendChild(item);
+        });
+      }
+      searchDropdown.classList.remove('hidden');
+    }
+
+    // 오픈스트리트맵(Nominatim) 연동 전국 골프장 실시간 검색
+    async function searchOnlineCourse() {
+      const q = searchInput.value.trim();
+      if (!q) {
+        showToast("검색창에 찾으실 골프장 이름을 먼저 입력해 주세요.");
+        searchInput.focus();
+        return;
+      }
+      searchDropdown.innerHTML = `<div class="p-4 text-xs font-bold text-emerald-800">🌐 전국 지도 데이터베이스에서 '${q}' 위치를 검색 중입니다...</div>`;
+      searchDropdown.classList.remove('hidden');
+
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=kr&limit=8&q=${encodeURIComponent(q)}`;
+        const res = await fetch(url, { headers: { 'Accept-Language': 'ko' } });
+        const places = await res.json();
+        if (!places || places.length === 0) {
+          searchDropdown.innerHTML = `<div class="p-4 text-xs text-red-600 font-bold">검색 결과가 없습니다. '지역명 + 골프장명'으로 다시 검색해 보세요.</div>`;
+          return;
+        }
+        searchDropdown.innerHTML = '';
+        places.forEach(p => {
+          const parts = p.display_name.split(',').map(s => s.trim());
+          const shortName = parts[0];
+          const addr = parts.slice(1, 4).reverse().join(' ');
+          const courseObj = {
+            name: shortName,
+            region: addr || '전국 온라인 검색',
+            lat: parseFloat(p.lat),
+            lon: parseFloat(p.lon)
+          };
+          const item = document.createElement('button');
+          item.className = 'w-full text-left px-4 py-2.5 hover:bg-emerald-50 flex justify-between items-center text-sm transition';
+          item.innerHTML = `
+            <span class="font-bold text-emerald-900">📍 ${courseObj.name}</span>
+            <span class="text-xs text-slate-400 truncate max-w-[180px]">${courseObj.region}</span>
+          `;
+          item.onclick = () => selectCourse(courseObj);
+          searchDropdown.appendChild(item);
+        });
+      } catch (err) {
+        searchDropdown.innerHTML = `<div class="p-4 text-xs text-red-600">온라인 검색 중 네트워크 오류가 발생했습니다.</div>`;
+      }
+    }
+
+    function selectCourse(course) {
+      currentCourse = course;
+      searchInput.value = course.name;
+      clearSearchBtn.classList.remove('hidden');
+      searchDropdown.classList.add('hidden');
+      document.getElementById('selectedCourseName').innerText = `${course.name} (${course.region})`;
+      document.getElementById('selectedCourseCoord').innerText = `${course.lat.toFixed(4)}, ${course.lon.toFixed(4)}`;
+      renderFavorites();
+      fetchWeather();
+    }
+
+    // 2. Open-Meteo 3대 기상청(한국 KMA, 유럽 ECMWF, 미국 GFS) 10일 데이터 패칭
+    async function fetchWeather() {
+      const badge = document.getElementById('statusBadge');
+      badge.innerText = '⏳ 3대 기상청 10일 시간대별 예보 수신 중...';
+
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentCourse.lat}&longitude=${currentCourse.lon}`
+        + `&hourly=temperature_2m,precipitation,wind_speed_10m,weather_code`
+        + `&models=kma_seamless,ecmwf_ifs025,gfs_seamless`
+        + `&wind_speed_unit=ms&timezone=Asia%2FSeoul&forecast_days=10`;
+
+      try {
+        const res = await fetch(url);
+        rawData = await res.json();
+
+        const dateSet = new Set();
+        rawData.hourly.time.forEach(t => dateSet.add(t.split('T')[0]));
+        availableDates = Array.from(dateSet);
+
+        const nowTime = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        badge.innerText = `✅ 실시간 동기화 완료 (${nowTime} 기준 · 10일 예보)`;
+
+        renderDayTabs();
+        renderTables();
+      } catch (e) {
+        badge.innerText = '❌ 기상 데이터를 불러오지 못했습니다.';
+        showToast("기상청 API 호출에 실패했습니다. 잠시 후 새로고침해 주세요.");
+      }
+    }
+
+    // 상단 10일 날짜 리본 렌더링
+    function renderDayTabs() {
+      const container = document.getElementById('dayTabsContainer');
+      container.innerHTML = '';
+      const weekNames = ['일','월','화','수','목','금','토'];
+      const h = rawData.hourly;
+
+      availableDates.forEach((dateStr, idx) => {
+        const dObj = new Date(dateStr + 'T00:00:00');
+        const m = dObj.getMonth() + 1;
+        const d = dObj.getDate();
+        const w = weekNames[dObj.getDay()];
+        const dLabel = idx === 0 ? '오늘' : idx === 1 ? '내일' : idx === 2 ? '모레' : idx === 3 ? '글피' : `+${idx}일`;
+
+        let maxRain = 0, minT = 99, maxT = -99;
+        for (let hr = 6; hr <= 19; hr++) {
+          const ti = idx * 24 + hr;
+          maxRain = Math.max(
+            maxRain,
+            h.precipitation_kma_seamless?.[ti] || 0,
+            h.precipitation_ecmwf_ifs025?.[ti] || 0,
+            h.precipitation_gfs_seamless?.[ti] || 0
+          );
+          const tVal = h.temperature_2m_kma_seamless?.[ti] ?? h.temperature_2m_ecmwf_ifs025?.[ti];
+          if (tVal !== null && tVal !== undefined) {
+            minT = Math.min(minT, tVal);
+            maxT = Math.max(maxT, tVal);
+          }
+        }
+        const icon = maxRain >= 2.0 ? '🌧️' : maxRain > 0 ? '🌦️' : '☀️';
+        const endIdx = daySpan === 10 ? availableDates.length - 1 : Math.min(selectedDateIdx + daySpan - 1, availableDates.length - 1);
+        const startIdx = daySpan === 10 ? 0 : selectedDateIdx;
+        const isActive = idx >= startIdx && idx <= endIdx;
+
+        const btn = document.createElement('button');
+        btn.className = `flex-shrink-0 px-3.5 py-2 rounded-xl border text-left transition min-w-[106px] ${
+          isActive
+            ? 'bg-emerald-800 text-white border-emerald-800 shadow-sm'
+            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+        }`;
+        btn.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] font-bold ${isActive ? 'text-emerald-200' : 'text-emerald-700'}">${dLabel}</span>
+            <span class="text-sm">${icon}</span>
+          </div>
+          <div class="text-xs sm:text-sm font-extrabold mt-0.5">${m}/${d} (${w})</div>
+          <div class="text-[10px] mt-0.5 ${isActive ? 'text-slate-200' : 'text-slate-400'}">
+            ${minT < 90 ? `${Math.round(minT)}°~${Math.round(maxT)}°` : '-'}
+          </div>
+        `;
+        btn.onclick = () => {
+          selectedDateIdx = idx;
+          if (daySpan === 10) daySpan = 4;
+          updateButtonsUI();
+          renderDayTabs();
+          renderTables();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function setDaySpan(span) {
+      daySpan = span;
+      updateButtonsUI();
+      renderDayTabs();
+      renderTables();
+    }
+
+    function setHourFilter(filter) {
+      hourFilter = filter;
+      updateButtonsUI();
+      renderTables();
+    }
+
+    function setViewStyle(style) {
+      viewStyle = style;
+      updateButtonsUI();
+      renderTables();
+    }
+
+    function updateButtonsUI() {
+      [4, 1, 10].forEach(s => {
+        document.getElementById(`span-${s}`).className = s === daySpan
+          ? 'text-xs px-3 py-1.5 rounded-lg font-bold bg-emerald-700 text-white shadow-sm'
+          : 'text-xs px-3 py-1.5 rounded-lg font-bold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50';
+      });
+      ['golf', 'part1', 'part2', 'part3', 'full24'].forEach(f => {
+        document.getElementById(`hr-${f}`).className = f === hourFilter
+          ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white'
+          : 'px-3 py-1.5 rounded-lg text-xs font-bold bg-white border text-slate-700 hover:bg-slate-50';
+      });
+      ['dailyCards', 'verticalList'].forEach(st => {
+        document.getElementById(`style-${st}`).className = st === viewStyle
+          ? 'px-3 py-1.5 rounded-lg bg-emerald-800 text-white transition'
+          : 'px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition';
+      });
+    }
+
+    // 3. 각 시간 셀(Cell) 안에 [기온 + 강수량 + 풍속]을 한꺼번에 보여주는 렌더러
+    function buildModelCell(t, r, w, wmo) {
+      if (t === null || t === undefined) {
+        return `<td class="py-2.5 px-1.5 text-center border-l border-slate-200 text-slate-300 text-[11px]">미제공</td>`;
+      }
+      const rainVal = (r !== null && r !== undefined) ? r : 0;
+      const windVal = (w !== null && w !== undefined) ? w : 0;
+      const hasRain = rainVal > 0;
+      const heavyRain = rainVal >= 2.0;
+      const strongWind = windVal >= 6.0;
+      const icon = getWeatherIcon(wmo, rainVal);
+
+      const cellBg = heavyRain ? 'bg-blue-100/90' : hasRain ? 'bg-blue-50/80' : '';
+      const rainBadge = hasRain
+        ? `<div class="mt-1 px-1 py-0.5 rounded bg-blue-600 text-white font-extrabold text-[11px] leading-tight">💧${rainVal.toFixed(1)}mm</div>`
+        : `<div class="mt-1 text-[11px] text-slate-400 leading-tight">0mm</div>`;
+      const windBadge = `<div class="mt-1 text-[11px] leading-tight ${strongWind ? 'text-amber-700 font-extrabold bg-amber-100 rounded px-1' : 'text-slate-500'}">💨${windVal.toFixed(1)}m/s</div>`;
+
+      return `
+        <td class="py-2 px-1.5 text-center align-middle border-l border-slate-200 whitespace-nowrap ${cellBg}">
+          <div class="font-extrabold text-slate-900 text-xs sm:text-[13px] leading-tight">${icon} ${t.toFixed(1)}°</div>
+          ${rainBadge}
+          ${windBadge}
+        </td>
+      `;
+    }
+
+    // 4. 메인 비교표 렌더링 (Row 1: 한국 KMA, Row 2: 유럽 ECMWF, Row 3: 미국 GFS)
+    function renderTables() {
+      if (!rawData || !rawData.hourly) return;
+      const h = rawData.hourly;
+      const container = document.getElementById('tablesContainer');
+      container.innerHTML = '';
+
+      const hourRanges = {
+        golf: [5, 20],
+        part1: [5, 10],
+        part2: [11, 15],
+        part3: [16, 22],
+        full24: [0, 23]
+      };
+      const [startH, endH] = hourRanges[hourFilter];
+      const weekNames = ['일','월','화','수','목','금','토'];
+
+      const startDay = daySpan === 10 ? 0 : selectedDateIdx;
+      const endDay = daySpan === 10 ? availableDates.length - 1 : Math.min(selectedDateIdx + daySpan - 1, availableDates.length - 1);
+
+      // [스타일 A] 일자별 가로 타임라인 비교표 (각 Row = 한국 / 유럽 / 미국 기상청)
+      if (viewStyle === 'dailyCards') {
+        for (let dIdx = startDay; dIdx <= endDay; dIdx++) {
+          const dateStr = availableDates[dIdx];
+          const dObj = new Date(dateStr + 'T00:00:00');
+          const m = dObj.getMonth() + 1;
+          const d = dObj.getDate();
+          const w = weekNames[dObj.getDay()];
+          const relLabel = dIdx === 0 ? '오늘' : dIdx === 1 ? '내일' : dIdx === 2 ? '모레' : dIdx === 3 ? '글피' : `D+${dIdx}`;
+
+          let cardHtml = `
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <div class="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded bg-emerald-400 text-slate-950 font-extrabold text-xs">${relLabel}</span>
+                  <h3 class="font-extrabold text-sm sm:text-base">${dateStr} (${m}월 ${d}일 ${w}요일)</h3>
+                </div>
+                <span class="text-xs text-slate-300 font-medium">${currentCourse.name} (${currentCourse.region})</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-100 text-slate-700 border-b border-slate-300">
+                      <th class="sticky-col sticky-col-shadow bg-slate-200 py-2.5 px-3 text-left font-extrabold border-r border-slate-300 min-w-[155px]">
+                        기상청 (Row) ＼ 시간
+                      </th>`;
+
+          for (let hr = startH; hr <= endH; hr++) {
+            const partTag = (hr >= 5 && hr <= 10) ? 'text-emerald-800' : (hr >= 11 && hr <= 15) ? 'text-blue-800' : 'text-slate-600';
+            cardHtml += `<th class="py-2 px-2 font-extrabold border-l border-slate-200 whitespace-nowrap ${partTag}">${String(hr).padStart(2, '0')}시</th>`;
+          }
+          cardHtml += `</tr></thead><tbody class="divide-y divide-slate-200">`;
+
+          // Row 1: 한국 기상청 (KMA)
+          cardHtml += `
+            <tr class="hover:bg-slate-50/70">
+              <td class="sticky-col sticky-col-shadow bg-blue-50 py-3 px-3 border-r border-slate-300 whitespace-nowrap">
+                <div class="font-extrabold text-blue-950 text-xs sm:text-sm">🇰🇷 한국 기상청 (KMA)</div>
+                <div class="text-[10px] text-blue-700 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
+              </td>`;
+          for (let hr = startH; hr <= endH; hr++) {
+            const i = dIdx * 24 + hr;
+            cardHtml += buildModelCell(
+              h.temperature_2m_kma_seamless?.[i],
+              h.precipitation_kma_seamless?.[i],
+              h.wind_speed_10m_kma_seamless?.[i],
+              h.weather_code_kma_seamless?.[i]
+            );
+          }
+          cardHtml += `</tr>`;
+
+          // Row 2: 유럽 중기예보센터 (ECMWF)
+          cardHtml += `
+            <tr class="hover:bg-slate-50/70">
+              <td class="sticky-col sticky-col-shadow bg-indigo-50 py-3 px-3 border-r border-slate-300 whitespace-nowrap">
+                <div class="font-extrabold text-indigo-950 text-xs sm:text-sm">🇪🇺 유럽 예보 (ECMWF)</div>
+                <div class="text-[10px] text-indigo-700 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
+              </td>`;
+          for (let hr = startH; hr <= endH; hr++) {
+            const i = dIdx * 24 + hr;
+            cardHtml += buildModelCell(
+              h.temperature_2m_ecmwf_ifs025?.[i],
+              h.precipitation_ecmwf_ifs025?.[i],
+              h.wind_speed_10m_ecmwf_ifs025?.[i],
+              h.weather_code_ecmwf_ifs025?.[i]
+            );
+          }
+          cardHtml += `</tr>`;
+
+          // Row 3: 미국 해양대기청 (GFS)
+          cardHtml += `
+            <tr class="hover:bg-slate-50/70">
+              <td class="sticky-col sticky-col-shadow bg-amber-50 py-3 px-3 border-r border-slate-300 whitespace-nowrap">
+                <div class="font-extrabold text-amber-950 text-xs sm:text-sm">🇺🇸 미국 예보 (GFS)</div>
+                <div class="text-[10px] text-amber-800 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
+              </td>`;
+          for (let hr = startH; hr <= endH; hr++) {
+            const i = dIdx * 24 + hr;
+            cardHtml += buildModelCell(
+              h.temperature_2m_gfs_seamless?.[i],
+              h.precipitation_gfs_seamless?.[i],
+              h.wind_speed_10m_gfs_seamless?.[i],
+              h.weather_code_gfs_seamless?.[i]
+            );
+          }
+          cardHtml += `</tr>`;
+
+          // Row 4: 3대 기상청 합의 판정
+          cardHtml += `
+            <tr class="bg-slate-50">
+              <td class="sticky-col sticky-col-shadow bg-slate-100 py-2 px-3 font-extrabold text-slate-700 border-r border-slate-300 whitespace-nowrap text-xs">
+                ⛳ 3개 기상청 합의 판정
+              </td>`;
+          for (let hr = startH; hr <= endH; hr++) {
+            const i = dIdx * 24 + hr;
+            const rains = [
+              h.precipitation_kma_seamless?.[i],
+              h.precipitation_ecmwf_ifs025?.[i],
+              h.precipitation_gfs_seamless?.[i]
+            ];
+            const rainCount = rains.filter(v => v !== null && v !== undefined && v >= 0.2).length;
+            let badge = `<span class="text-emerald-700 font-bold text-[11px]">🟢 쾌적</span>`;
+            if (rainCount >= 2) badge = `<span class="text-red-600 font-extrabold text-[11px]">🔴 우천(${rainCount}/3)</span>`;
+            else if (rainCount === 1) badge = `<span class="text-amber-600 font-bold text-[11px]">🟡 엇갈림</span>`;
+            cardHtml += `<td class="py-2 px-1 text-center border-l border-slate-200 whitespace-nowrap">${badge}</td>`;
+          }
+          cardHtml += `</tr></tbody></table></div></div>`;
+          container.innerHTML += cardHtml;
+        }
+        return;
+      }
+
+      // [스타일 B] 시간순 세로 상세표 (매 시간대마다 한국/유럽/미국이 3개 Row로 분리)
+      let tableHtml = `
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="overflow-x-auto max-h-[760px]">
+            <table class="w-full text-xs sm:text-sm text-center border-collapse">
+              <thead class="bg-slate-800 text-white sticky top-0 z-30">
+                <tr>
+                  <th class="py-3 px-3 border-r border-slate-700">날짜 / 시간</th>
+                  <th class="py-3 px-3 border-r border-slate-700">기상청 (Row 구분)</th>
+                  <th class="py-3 px-3 border-r border-slate-700">🌡️ 기온 (°C)</th>
+                  <th class="py-3 px-3 border-r border-slate-700">💧 강수량 (mm)</th>
+                  <th class="py-3 px-3 border-r border-slate-700">💨 풍속 (m/s)</th>
+                  <th class="py-3 px-3">시간대 종합 판정</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">`;
+
+      for (let dIdx = startDay; dIdx <= endDay; dIdx++) {
+        const dateStr = availableDates[dIdx];
+        const dObj = new Date(dateStr + 'T00:00:00');
+        const shortDate = `${dObj.getMonth() + 1}/${dObj.getDate()}(${weekNames[dObj.getDay()]})`;
+
+        for (let hr = startH; hr <= endH; hr++) {
+          const i = dIdx * 24 + hr;
+          const models = [
+            { label: "🇰🇷 한국 기상청 (KMA)", cls: "bg-blue-50 text-blue-950", t: h.temperature_2m_kma_seamless?.[i], r: h.precipitation_kma_seamless?.[i], w: h.wind_speed_10m_kma_seamless?.[i], wmo: h.weather_code_kma_seamless?.[i] },
+            { label: "🇪🇺 유럽 예보 (ECMWF)", cls: "bg-indigo-50 text-indigo-950", t: h.temperature_2m_ecmwf_ifs025?.[i], r: h.precipitation_ecmwf_ifs025?.[i], w: h.wind_speed_10m_ecmwf_ifs025?.[i], wmo: h.weather_code_ecmwf_ifs025?.[i] },
+            { label: "🇺🇸 미국 예보 (GFS)", cls: "bg-amber-50 text-amber-950", t: h.temperature_2m_gfs_seamless?.[i], r: h.precipitation_gfs_seamless?.[i], w: h.wind_speed_10m_gfs_seamless?.[i], wmo: h.weather_code_gfs_seamless?.[i] }
+          ];
+
+          const rainCnt = models.filter(m => m.r !== null && m.r !== undefined && m.r >= 0.2).length;
+          let verdict = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">🟢 쾌적</span>`;
+          if (rainCnt >= 2) verdict = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">🔴 우천 유력 (${rainCnt}/3)</span>`;
+          else if (rainCnt === 1) verdict = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">🟡 예보 엇갈림</span>`;
+
+          models.forEach((m, mIdx) => {
+            const isFirst = mIdx === 0;
+            const hasRain = m.r !== null && m.r !== undefined && m.r > 0;
+            const icon = getWeatherIcon(m.wmo, m.r);
+
+            tableHtml += `<tr class="${isFirst ? 'border-t-2 border-slate-400' : ''} ${hasRain ? 'bg-blue-50/40' : 'hover:bg-slate-50'}">`;
+            if (isFirst) {
+              tableHtml += `
+                <td rowspan="3" class="py-2 px-3 font-extrabold bg-slate-50 border-r border-slate-300 whitespace-nowrap">
+                  <div class="text-xs text-slate-500">${shortDate}</div>
+                  <div class="text-sm text-slate-900 mt-0.5">${String(hr).padStart(2, '0')}:00</div>
+                </td>`;
+            }
+            tableHtml += `
+              <td class="py-2 px-3 font-bold border-r border-slate-200 text-left whitespace-nowrap ${m.cls}">${m.label}</td>
+              <td class="py-2 px-3 font-extrabold border-r border-slate-200">${m.t !== null && m.t !== undefined ? `${icon} ${m.t.toFixed(1)}°C` : '<span class="text-slate-300">미제공</span>'}</td>
+              <td class="py-2 px-3 border-r border-slate-200">${hasRain ? `<span class="font-extrabold text-blue-700">💧 ${m.r.toFixed(1)} mm</span>` : '<span class="text-slate-300">0 mm</span>'}</td>
+              <td class="py-2 px-3 border-r border-slate-200 ${m.w >= 6 ? 'font-extrabold text-amber-700' : 'text-slate-600'}">${m.w !== null && m.w !== undefined ? `💨 ${m.w.toFixed(1)} m/s` : '-'}</td>
+            `;
+            if (isFirst) {
+              tableHtml += `<td rowspan="3" class="py-2 px-3 bg-white border-l border-slate-200 whitespace-nowrap">${verdict}</td>`;
+            }
+            tableHtml += `</tr>`;
+          });
+        }
+      }
+
+      tableHtml += `</tbody></table></div></div>`;
+      container.innerHTML = tableHtml;
+    }
+
+    // 초기 실행
+    renderFavorites();
+    fetchWeather();
+  </script>
+</body>
+</html>
