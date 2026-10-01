@@ -490,7 +490,7 @@
 
     function getKmaLabel() {
       return kmaUsingFallback
-        ? `🇰🇷 한국)`
+        ? `🇰🇷 한국`
         : MODEL_CONFIG.kma.label;
     }
 
@@ -1003,7 +1003,7 @@
           cardHtml += `
             <tr class="hover:bg-slate-50/70">
               <td class="sticky-col sticky-col-shadow bg-indigo-50 py-3 px-3 border-r border-slate-300 whitespace-nowrap">
-                <div class="font-extrabold text-indigo-950 text-xs sm:text-sm">🇪🇺 유럽 예보 (ECMWF)</div>
+                <div class="font-extrabold text-indigo-950 text-xs sm:text-sm">🇪🇺 유럽</div>
                 <div class="text-[10px] text-indigo-700 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
               </td>`;
           for (let hr = startH; hr <= endH; hr++) {
@@ -1021,7 +1021,7 @@
           cardHtml += `
             <tr class="hover:bg-slate-50/70">
               <td class="sticky-col sticky-col-shadow bg-amber-50 py-3 px-3 border-r border-slate-300 whitespace-nowrap">
-                <div class="font-extrabold text-amber-950 text-xs sm:text-sm">🇺🇸 미국 예보 (GFS)</div>
+                <div class="font-extrabold text-amber-950 text-xs sm:text-sm">🇺🇸 미국</div>
                 <div class="text-[10px] text-amber-800 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
               </td>`;
           for (let hr = startH; hr <= endH; hr++) {
@@ -1086,8 +1086,8 @@
           const i = hourDataIndex(dIdx, hr);
           const models = [
             { label: getKmaLabel(), cls: "bg-blue-50 text-blue-950", t: h.temperature_2m_kma_seamless?.[i], r: h.precipitation_kma_seamless?.[i], w: h.wind_speed_10m_kma_seamless?.[i], wmo: h.weather_code_kma_seamless?.[i] },
-            { label: "🇪🇺 유럽 예보 (ECMWF)", cls: "bg-indigo-50 text-indigo-950", t: h.temperature_2m_ecmwf_ifs025?.[i], r: h.precipitation_ecmwf_ifs025?.[i], w: h.wind_speed_10m_ecmwf_ifs025?.[i], wmo: h.weather_code_ecmwf_ifs025?.[i] },
-            { label: "🇺🇸 미국 예보 (GFS)", cls: "bg-amber-50 text-amber-950", t: h.temperature_2m_gfs_seamless?.[i], r: h.precipitation_gfs_seamless?.[i], w: h.wind_speed_10m_gfs_seamless?.[i], wmo: h.weather_code_gfs_seamless?.[i] }
+            { label: "🇪🇺 유럽", cls: "bg-indigo-50 text-indigo-950", t: h.temperature_2m_ecmwf_ifs025?.[i], r: h.precipitation_ecmwf_ifs025?.[i], w: h.wind_speed_10m_ecmwf_ifs025?.[i], wmo: h.weather_code_ecmwf_ifs025?.[i] },
+            { label: "🇺🇸 미국", cls: "bg-amber-50 text-amber-950", t: h.temperature_2m_gfs_seamless?.[i], r: h.precipitation_gfs_seamless?.[i], w: h.wind_speed_10m_gfs_seamless?.[i], wmo: h.weather_code_gfs_seamless?.[i] }
           ];
 
           const rainCnt = models.filter(m => m.r !== null && m.r !== undefined && m.r >= 0.2).length;
