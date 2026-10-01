@@ -482,15 +482,15 @@
     let kmaFallbackSource = '';
 
     const MODEL_CONFIG = {
-      kma: { label: '🇰🇷 한국 기상청 (KMA)' },
-      ecmwf: { model: 'ecmwf_ifs025', label: '🇪🇺 유럽 예보 (ECMWF)' },
-      gfs: { model: 'gfs_seamless', label: '🇺🇸 미국 예보 (GFS)' },
-      fallback: { model: 'best_match', label: '🌐 국내 최적 대체 예보' }
+      kma: { label: '🇰🇷 한국' },
+      ecmwf: { model: 'ecmwf_ifs025', label: '🇪🇺 유럽' },
+      gfs: { model: 'gfs_seamless', label: '🇺🇸 미국' },
+      fallback: { model: 'best_match', label: '🌐 국내' }
     };
 
     function getKmaLabel() {
       return kmaUsingFallback
-        ? `🇰🇷 국내 대체 예보 (${kmaFallbackSource} · KMA 갱신 대기)`
+        ? `🇰🇷 한국)`
         : MODEL_CONFIG.kma.label;
     }
 
