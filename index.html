@@ -158,7 +158,7 @@
         <div class="flex flex-wrap items-center gap-1.5">
           <span class="text-xs font-bold text-slate-500 mr-1">⏰ 시간대 필터:</span>
           <button onclick="setHourFilter('golf')" id="hr-golf" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white">
-            라운딩 (05~23시)
+            라운딩 (05~24시)
           </button>
           <button onclick="setHourFilter('part1')" id="hr-part1" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border text-slate-700 hover:bg-slate-50">
             1부 (05~10시)
@@ -167,7 +167,7 @@
             2부 (11~15시)
           </button>
           <button onclick="setHourFilter('part3')" id="hr-part3" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border text-slate-700 hover:bg-slate-50">
-            3부·야간 (16~23시)
+            3부·야간 (16~22시)
           </button>
           <button onclick="setHourFilter('full24')" id="hr-full24" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border text-slate-700 hover:bg-slate-50">
             24시간 전체
@@ -336,8 +336,80 @@
       // 제주
       ["제주CC","제주 제주시",33.440,126.500],["오라CC","제주 제주시",33.470,126.510],["한라산CC","제주 제주시",33.400,126.490],["라온GC","제주 제주시",33.360,126.260],["에버리스GC","제주 제주시",33.420,126.360],["엘리시안 제주","제주 제주시",33.410,126.390],["세인트포GC","제주 서귀포",33.360,126.700],["사이프러스GC","제주 서귀포",33.350,126.680],["부영CC","제주 서귀포",33.270,126.620],["우리들CC","제주 서귀포",33.290,126.520],["테디밸리GC","제주 서귀포",33.290,126.330],["캐슬렉스 제주","제주 서귀포",33.310,126.310],["롯데스카이힐 제주","제주 서귀포",33.290,126.410],["플라자CC 제주","제주 제주시",33.430,126.420]
     ].map(([name, region, lat, lon]) => ({ name, region, lat, lon }));
+
+    // 추가 전국 구장: 자주 검색되는 회원제·대중제·리조트 코스를 폭넓게 반영했습니다.
+    const NATIONWIDE_COURSES = [
+      // 서울·경기권
+      ["한림용인CC","경기 용인",37.225,127.287],["한림안성CC","경기 안성",37.030,127.300],["한림광릉CC","경기 포천",37.850,127.170],["한림성심CC","강원 횡성",37.490,128.180],["한원CC","경기 용인",37.250,127.140],["플라자CC 플라자","경기 용인",37.140,127.190],["레이크힐스 안성GC","경기 안성",37.040,127.230],["리앤리CC","경기 가평",37.840,127.460],["아난티클럽 서울","경기 가평",37.680,127.460],["베뉴지CC","경기 가평",37.860,127.480],["더크로스비 빌리언","경기 이천",37.210,127.430],["사우스스프링스","경기 이천",37.200,127.510],["도드람CC","경기 이천",37.250,127.430],["비에이비스타","경기 이천",37.170,127.480],["이천마이다스GC","경기 이천",37.180,127.520],["여주썬밸리CC","경기 여주",37.270,127.650],["블루헤런GC","경기 여주",37.260,127.570],["루나엑스CC","경기 여주",37.280,127.630],["세라지오CC","경기 여주",37.260,127.600],["남서울CC","경기 성남",37.380,127.080],["성남GC","경기 성남",37.390,127.100],["용인CC","경기 용인",37.220,127.250],["레이크힐스 용인","경기 용인",37.190,127.250],["아시아나 컨트리클럽","경기 용인",37.220,127.290],["골프존카운티 화랑","경기 안성",37.010,127.260],["베스트밸리GC","경기 안성",37.100,127.260],["클럽모우 안성","경기 안성",37.060,127.220],["파인리즌CC","경기 안성",37.060,127.280],["이글몬트CC","경기 안성",37.090,127.210],["버드우드GC 경기","경기 안성",37.070,127.230],["아시아나CC","경기 용인",37.220,127.290],["자유로CC","경기 파주",37.850,126.820],["송추CC","경기 양주",37.740,126.960],["로얄포레CC","경기 양주",37.790,127.120],["양주CC","경기 양주",37.800,127.030],["레이크우드CC","경기 양주",37.780,127.080],["포천아도니스CC","경기 포천",38.020,127.280],["포천힐스CC","경기 포천",37.910,127.240],["필로스GC","경기 포천",37.900,127.230],["베어크리크 포천","경기 포천",37.890,127.300],["일동레이크GC","경기 포천",37.960,127.320],["크리스탈밸리CC","경기 가평",37.870,127.470],["썬힐GC","경기 가평",37.820,127.440],["프리스틴밸리GC","경기 가평",37.820,127.410],["더스타휴CC","경기 양평",37.540,127.670],["양평TPC","경기 양평",37.500,127.550],["캐슬렉스 서울GC","경기 하남",37.560,127.170],["뉴코리아CC","경기 고양",37.690,126.870],["한양CC","경기 고양",37.710,126.830],["올림픽CC","경기 고양",37.680,126.850],["덕평CC","경기 이천",37.220,127.380],
+      // 강원권
+      ["한림성심CC","강원 횡성",37.490,128.180],["알펜시아CC","강원 평창",37.660,128.670],["휘닉스CC","강원 평창",37.580,128.320],["휘닉스평창GC","강원 평창",37.580,128.320],["오투리조트CC","강원 태백",37.170,128.980],["태백산CC","강원 태백",37.160,128.980],["오크힐스CC","강원 원주",37.360,127.900],["파크밸리CC","강원 원주",37.350,127.950],["센추리21CC","강원 원주",37.410,127.780],["동서울레스피아CC","강원 원주",37.350,127.830],["횡성베이스볼CC","강원 횡성",37.490,127.990],["블루캐니언CC","강원 홍천",37.690,127.810],["홍천비발디파크CC","강원 홍천",37.650,127.680],["세이지우드 홍천","강원 홍천",37.690,127.810],["로드힐스GC","강원 춘천",37.860,127.670],["라데나CC","강원 춘천",37.830,127.700],["더플레이어스GC","강원 춘천",37.850,127.750],["파인리즈리조트","강원 고성",38.230,128.540],["설악프라자CC","강원 속초",38.180,128.480],["강릉CC","강원 강릉",37.780,128.900],["메이플비치GC","강원 강릉",37.700,129.010],
+      // 충청권
+      ["천룡CC","충남 천안",36.720,127.220],["골프존카운티 천안","충남 천안",36.700,127.190],["우정힐스CC","충남 천안",36.760,127.250],["천안상록CC","충남 천안",36.740,127.280],["버드우드CC","충남 천안",36.750,127.230],["골드힐CC","충남 천안",36.690,127.250],["솔라고CC","충남 태안",36.760,126.250],["현대솔라고CC","충남 태안",36.760,126.250],["로얄링스CC","충남 태안",36.700,126.300],["골든베이GC","충남 태안",36.780,126.180],["파인스톤CC","충남 당진",36.950,126.680],["기지시CC","충남 당진",36.900,126.700],["공주CC","충남 공주",36.460,127.100],["백제CC","충남 부여",36.250,126.900],["세종에머슨CC","세종",36.500,127.280],["세종필드GC","세종",36.500,127.270],["세종레이캐슬CC","세종",36.550,127.270],["유성CC","대전 유성",36.360,127.330],["계룡대CC","충남 계룡",36.270,127.240],["대청호CC","충북 청주",36.600,127.520],["그랜드CC","충북 청주",36.710,127.460],["떼제베CC","충북 청주",36.640,127.390],["코스카CC","충북 음성",36.950,127.650],["레인보우힐스CC","충북 음성",37.050,127.680],["진천CC","충북 진천",36.880,127.420],["에머슨GC","충북 진천",36.900,127.430],["크리스탈카운티CC","충북 진천",36.850,127.450],["동촌CC","충북 충주",37.020,127.800],["킹스데일GC","충북 충주",36.970,127.850],["임페리얼레이크CC","충북 충주",37.060,127.770],["제천힐스CC","충북 제천",37.130,128.120],["힐데스하임CC","충북 제천",37.130,128.200],
+      // 전라권
+      ["광주CC","광주 광산",35.150,126.800],["어등산CC","광주 광산",35.140,126.780],["무등산CC","광주 북구",35.220,126.950],["함평다이너스티CC","전남 함평",35.060,126.520],["무안CC","전남 무안",34.980,126.470],["영암아크로CC","전남 영암",34.800,126.600],["사우스링스 영암","전남 영암",34.760,126.570],["해남파인비치CC","전남 해남",34.570,126.310],["보성CC","전남 보성",34.800,127.100],["순천CC","전남 순천",35.000,127.420],["여수경도CC","전남 여수",34.720,127.740],["디오션CC","전남 여수",34.750,127.700],["화순CC","전남 화순",35.000,126.990],["골드레이크CC","전남 나주",34.980,126.820],["드래곤레이크CC","전북 남원",35.380,127.410],["남원상록GC","전북 남원",35.420,127.390],["익산CC","전북 익산",36.010,127.000],["군산CC","전북 군산",35.980,126.700],["군산컨트리클럽","전북 군산",35.980,126.700],["선운CC","전북 고창",35.430,126.580],["고창CC","전북 고창",35.440,126.570],["전주샹그릴라CC","전북 전주",35.840,127.100],["전주CC","전북 완주",35.900,127.180],["무주덕유산CC","전북 무주",35.900,127.720],["장수골프리조트","전북 장수",35.650,127.520],
+      // 경상권
+      ["부산CC","부산 금정",35.280,129.100],["동래베네스트CC","부산 동래",35.220,129.090],["해운대CC","부산 기장",35.250,129.220],["아시아드CC","부산 기장",35.270,129.210],["스톤게이트CC","부산 기장",35.310,129.200],["동부산CC","부산 기장",35.300,129.190],["가야CC","경남 김해",35.260,128.920],["김해상록GC","경남 김해",35.270,128.860],["정산CC","경남 김해",35.260,128.900],["롯데스카이힐 김해CC","경남 김해",35.240,128.860],["에이원CC","경남 양산",35.360,129.070],["통도파인이스트CC","경남 양산",35.410,129.050],["창원CC","경남 창원",35.290,128.680],["용원CC","경남 창원",35.090,128.800],["힐마루CC","경남 창녕",35.540,128.500],["부곡CC","경남 창녕",35.450,128.600],["의령친환경GC","경남 의령",35.320,128.250],["진주CC","경남 진주",35.180,128.050],["사천CC","경남 사천",35.000,128.050],["남해힐튼CC","경남 남해",34.790,127.940],["사우스케이프CC","경남 남해",34.740,128.050],["대구CC","경북 경산",35.890,128.810],["인터불고CC","경북 경산",35.860,128.780],["팔공CC","경북 칠곡",35.980,128.610],["파미힐스CC","경북 칠곡",35.970,128.520],["구미CC","경북 구미",36.120,128.350],["선산CC","경북 구미",36.160,128.270],["골프존카운티 구미","경북 구미",36.130,128.340],["블루원 디아너스CC","경북 경주",35.810,129.290],["경주신라CC","경북 경주",35.850,129.250],["경주CC","경북 경주",35.800,129.170],["보문GC","경북 경주",35.850,129.270],["포항CC","경북 포항",36.020,129.320],["오션힐스 포항CC","경북 포항",36.050,129.340],["오션힐스 영천CC","경북 영천",35.990,129.010],["골프존카운티 청통","경북 영천",35.990,128.950],["안동CC","경북 안동",36.540,128.730],["문경GC","경북 문경",36.640,128.140],["예천한맥CC","경북 예천",36.650,128.400],["울진마린CC","경북 울진",36.980,129.390],
+      // 제주
+      ["제주CC","제주 제주시",33.440,126.500],["오라CC","제주 제주시",33.470,126.510],["한라산CC","제주 제주시",33.400,126.490],["라온GC","제주 제주시",33.360,126.260],["에버리스GC","제주 제주시",33.420,126.360],["엘리시안 제주","제주 제주시",33.410,126.390],["세인트포GC","제주 서귀포",33.360,126.700],["사이프러스GC","제주 서귀포",33.350,126.680],["부영CC","제주 서귀포",33.270,126.620],["우리들CC","제주 서귀포",33.290,126.520],["테디밸리GC","제주 서귀포",33.290,126.330],["캐슬렉스 제주","제주 서귀포",33.310,126.310],["스프링데일GC","제주 서귀포",33.300,126.750],["더시에나CC","제주 서귀포",33.290,126.350],["해비치CC 제주","제주 서귀포",33.310,126.770]
+    ].map(([name, region, lat, lon]) => ({ name, region, lat, lon }));
+
     const knownCourseNames = new Set(GOLF_COURSES.map(course => course.name));
-    GOLF_COURSES.push(...ADDITIONAL_COURSES.filter(course => !knownCourseNames.has(course.name)));
+    [...ADDITIONAL_COURSES, ...NATIONWIDE_COURSES].forEach(course => {
+      if (!knownCourseNames.has(course.name)) {
+        GOLF_COURSES.push(course);
+        knownCourseNames.add(course.name);
+      }
+    });
+
+    // OpenStreetMap에 등록된 전국 골프장을 한 번 더 불러와 목록을 최신화합니다.
+    // 브라우저별 30일 캐시를 사용해 매 방문마다 외부 지도 서버를 호출하지 않습니다.
+    const COURSE_CACHE_KEY = 'kgolf_osm_courses_v1';
+    const COURSE_CACHE_TTL = 30 * 24 * 60 * 60 * 1000;
+    function mergeCourses(courses) {
+      let added = 0;
+      courses.forEach(course => {
+        if (!course?.name || !Number.isFinite(course.lat) || !Number.isFinite(course.lon)) return;
+        const normalized = course.name.replace(/\s+/g, '').toLowerCase();
+        const alreadyExists = GOLF_COURSES.some(existing => existing.name.replace(/\s+/g, '').toLowerCase() === normalized);
+        if (!alreadyExists) {
+          GOLF_COURSES.push(course);
+          added++;
+        }
+      });
+      return added;
+    }
+
+    async function loadNationwideGolfCourses() {
+      try {
+        const cached = JSON.parse(localStorage.getItem(COURSE_CACHE_KEY) || 'null');
+        if (cached?.savedAt && Date.now() - cached.savedAt < COURSE_CACHE_TTL && Array.isArray(cached.courses)) {
+          mergeCourses(cached.courses);
+          return;
+        }
+        const query = '[out:json][timeout:25];area["ISO3166-1"="KR"]->.kr;(nwr["leisure"="golf_course"](area.kr););out center tags;';
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 18000);
+        const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: controller.signal });
+        clearTimeout(timer);
+        if (!response.ok) throw new Error('지도 목록을 불러오지 못했습니다.');
+        const data = await response.json();
+        const courses = (data.elements || []).map(item => {
+          const tags = item.tags || {};
+          const name = tags['name:ko'] || tags.name;
+          return {
+            name: name ? `${name}`.replace(/^골프장\s*/, '') : '',
+            region: tags['addr:city'] || tags['addr:province'] || tags['addr:state'] || '전국',
+            lat: Number(item.lat ?? item.center?.lat),
+            lon: Number(item.lon ?? item.center?.lon)
+          };
+        }).filter(course => course.name && Number.isFinite(course.lat) && Number.isFinite(course.lon));
+        localStorage.setItem(COURSE_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), courses }));
+        const added = mergeCourses(courses);
+        if (added) showToast(`전국 지도에서 골프장 ${added}곳을 추가했습니다.`);
+      } catch (error) {
+        // 내장 목록과 이름별 온라인 검색은 외부 지도 목록을 불러오지 못해도 계속 동작합니다.
+      }
+    }
 
     // 한글 초성 추출 함수
     const CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
@@ -403,7 +475,7 @@
     let availableDates = [];
     let selectedDateIdx = 0;
     let daySpan = 4;              // 기본 4일 연속 표시 (오늘~글피)
-    let hourFilter = 'golf';      // 'golf'(05~20시) | 'part1' | 'part2' | 'part3' | 'full24'
+    let hourFilter = 'golf';      // 'golf'(05~24시) | 'part1' | 'part2' | 'part3' | 'full24'
     let viewStyle = 'dailyCards'; // 'dailyCards' | 'verticalList'
     let favorites = ["남서울CC", "안양CC", "라비에벨CC", "해슬리나인브릿지"];
     let kmaUsingFallback = false;
@@ -418,7 +490,7 @@
 
     function getKmaLabel() {
       return kmaUsingFallback
-        ? `🇰🇷 한국`
+        ? `🇰🇷 국내 대체 예보 (${kmaFallbackSource} · KMA 갱신 대기)`
         : MODEL_CONFIG.kma.label;
     }
 
@@ -862,7 +934,7 @@
       container.innerHTML = '';
 
       const hourRanges = {
-        golf: [5, 20],
+        golf: [5, 24],
         part1: [5, 10],
         part2: [11, 15],
         part3: [16, 22],
@@ -870,6 +942,8 @@
       };
       const [startH, endH] = hourRanges[hourFilter];
       const weekNames = ['일','월','화','수','목','금','토'];
+      // 24시는 다음 날 00시 예보를 뜻합니다.
+      const hourDataIndex = (dayIndex, hour) => dayIndex * 24 + hour;
 
       const startDay = daySpan === 10 ? 0 : selectedDateIdx;
       const endDay = daySpan === 10 ? availableDates.length - 1 : Math.min(selectedDateIdx + daySpan - 1, availableDates.length - 1);
@@ -915,7 +989,7 @@
                 <div class="text-[10px] text-blue-700 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
               </td>`;
           for (let hr = startH; hr <= endH; hr++) {
-            const i = dIdx * 24 + hr;
+            const i = hourDataIndex(dIdx, hr);
             cardHtml += buildModelCell(
               h.temperature_2m_kma_seamless?.[i],
               h.precipitation_kma_seamless?.[i],
@@ -929,11 +1003,11 @@
           cardHtml += `
             <tr class="hover:bg-slate-50/70">
               <td class="sticky-col sticky-col-shadow bg-indigo-50 py-3 px-3 border-r border-slate-300 whitespace-nowrap">
-                <div class="font-extrabold text-indigo-950 text-xs sm:text-sm">🇪🇺 유럽</div>
+                <div class="font-extrabold text-indigo-950 text-xs sm:text-sm">🇪🇺 유럽 예보 (ECMWF)</div>
                 <div class="text-[10px] text-indigo-700 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
               </td>`;
           for (let hr = startH; hr <= endH; hr++) {
-            const i = dIdx * 24 + hr;
+            const i = hourDataIndex(dIdx, hr);
             cardHtml += buildModelCell(
               h.temperature_2m_ecmwf_ifs025?.[i],
               h.precipitation_ecmwf_ifs025?.[i],
@@ -947,11 +1021,11 @@
           cardHtml += `
             <tr class="hover:bg-slate-50/70">
               <td class="sticky-col sticky-col-shadow bg-amber-50 py-3 px-3 border-r border-slate-300 whitespace-nowrap">
-                <div class="font-extrabold text-amber-950 text-xs sm:text-sm">🇺🇸 미국</div>
+                <div class="font-extrabold text-amber-950 text-xs sm:text-sm">🇺🇸 미국 예보 (GFS)</div>
                 <div class="text-[10px] text-amber-800 font-medium mt-0.5">기온 · 강수량 · 풍속</div>
               </td>`;
           for (let hr = startH; hr <= endH; hr++) {
-            const i = dIdx * 24 + hr;
+            const i = hourDataIndex(dIdx, hr);
             cardHtml += buildModelCell(
               h.temperature_2m_gfs_seamless?.[i],
               h.precipitation_gfs_seamless?.[i],
@@ -968,7 +1042,7 @@
                 ⛳ 3개 기상청 합의 판정
               </td>`;
           for (let hr = startH; hr <= endH; hr++) {
-            const i = dIdx * 24 + hr;
+            const i = hourDataIndex(dIdx, hr);
             const rains = [
               h.precipitation_kma_seamless?.[i],
               h.precipitation_ecmwf_ifs025?.[i],
@@ -1009,7 +1083,7 @@
         const shortDate = `${dObj.getMonth() + 1}/${dObj.getDate()}(${weekNames[dObj.getDay()]})`;
 
         for (let hr = startH; hr <= endH; hr++) {
-          const i = dIdx * 24 + hr;
+          const i = hourDataIndex(dIdx, hr);
           const models = [
             { label: getKmaLabel(), cls: "bg-blue-50 text-blue-950", t: h.temperature_2m_kma_seamless?.[i], r: h.precipitation_kma_seamless?.[i], w: h.wind_speed_10m_kma_seamless?.[i], wmo: h.weather_code_kma_seamless?.[i] },
             { label: "🇪🇺 유럽 예보 (ECMWF)", cls: "bg-indigo-50 text-indigo-950", t: h.temperature_2m_ecmwf_ifs025?.[i], r: h.precipitation_ecmwf_ifs025?.[i], w: h.wind_speed_10m_ecmwf_ifs025?.[i], wmo: h.weather_code_ecmwf_ifs025?.[i] },
@@ -1054,6 +1128,7 @@
 
     // 초기 실행
     renderFavorites();
+    loadNationwideGolfCourses();
     fetchWeather();
   </script>
 </body>
